@@ -1,0 +1,14 @@
+# Общие правила
+node_modules/
+.env
+.DS_Store
+dist
+*.log
+
+# Бэкенд
+backend/.env
+cms-backend/prisma/migrations/
+
+# Фронтенд
+frontend/.env
+frontend/build/
