@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
 import { useParams } from "react-router-dom";
-import styles from "./PostView.module.css";
 import Navbar from "../components/NavBar";
 
 export default function PostView() {

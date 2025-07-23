@@ -14,12 +14,37 @@ interface AuthenticatedRequest extends express.Request {
   
 
 router.get('/profile', authenticate, (req: AuthenticatedRequest, res) => {
-    res.json({user: (req as any).user});
+    res.json({user: (req as AuthenticatedRequest).user});
 });
 
 router.get('/posts', authenticate, async(req: AuthenticatedRequest, res) => {
     try {
         const posts = await prisma.post.findMany({
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        return res.status(200).json(posts);
+    } catch(err) {
+        return res.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+router.get('/my-posts', authenticate, async(req: AuthenticatedRequest, res) => {
+    const userId = req.user.id;
+    try {
+        const posts = await prisma.post.findMany({
+            where: {
+                author: {
+                    id: userId
+                }
+            },
             include: {
                 author: {
                     select: {
@@ -147,6 +172,7 @@ router.put('/post/:id', authenticate, async(req: AuthenticatedRequest, res) => {
 
 router.delete('/post/:id', authenticate, async(req: AuthenticatedRequest, res) => {
     const postId = parseInt(req.params.id);
+    console.log(postId)
 
     try {
         const exists = await prisma.post.findUnique({

@@ -1,62 +1,143 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
 import API from "../services/api";
 import { useNavigate } from "react-router-dom";
-import styles from "./CreatePostModal.module.css";
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
+import * as yup from "yup";
+import { Input, Button, Textarea } from "@headlessui/react";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm } from "react-hook-form";
+import clsx from 'clsx'
 
-interface CreatePostProps {
-  visible: boolean;
-  setVisible: Dispatch<SetStateAction<boolean>>;
-}
-export default function CreatePost({ visible, setVisible }: CreatePostProps) {
-  interface CreatedPost {
-    data: {
-      title: string;
-      content: string;
-      slug: string;
-      authorId: number;
-    };
-  }
+const schema = yup.object({
+    title: yup.string().required("Обязательное поле"),
+    content: yup.string().required("Обязательное поле")
+});
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+export default function CreatePostModal() {
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const rootClasses = [styles.modal];
+  
+  const {
+      register,
+      handleSubmit,
+      reset,
+      formState: { errors }
+  } = useForm({
+      resolver: yupResolver(schema),
+      defaultValues: { title: "", content: ""}
+  });
 
-  if (visible) {
-    rootClasses.push(styles.activate);
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async(data: {title: string, content: string}) => {
     try {
-      const res = (await API.post("api/new-post", { title, content })) as CreatedPost;
-      navigate(`/posts/${res.data.slug}`); 
-      setVisible(false);
-    } catch (err) {
-      alert("Failed to create a post");
+      const post = await API.post('/api/new-post', data);
+      console.log(post);
+      navigate(`/:${post.data.slug}`);
+      setOpen(false); // Закрываем модальное окно после успешного создания
+      reset(); // Сбрасываем форму
+    } catch(err) {
+      alert("Failed to create post")
     }
-  };
+  }
 
   return (
-    <div className={rootClasses.join(' ')} onClick={() => setVisible(false)}>
-        <form onSubmit={handleSubmit} className={styles.formContainer} onClick={(e) => e.stopPropagation()}>
-          <input
-              type="text"
-              placeholder="Заголовок"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className={styles.inputField}
-          />
-          <textarea
-              placeholder="Содержимое поста..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className={`${styles.inputField} ${styles.textArea}`}
-          />
-          <button type="submit" className={styles.submitButton}>
-              Создать пост
-          </button>
-        </form>
-    </div>
-  );
+    <>
+      <Button 
+        onClick={() => setOpen(true)} 
+        className="bg-[#ffdea3] hover:bg-[#fffbef] border-[#313131] border-2 px-3 py-1 rounded-md text-[#634b20] cursor-pointer"
+      >
+        Создать пост
+      </Button>
+      
+      <Dialog 
+        open={open} 
+        onClose={() => setOpen(false)} 
+        className="relative z-50"
+      >
+        <DialogBackdrop 
+          transition
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm"
+        />
+        
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel 
+            className="w-full max-w-3xl rounded-xl bg-white p-6 shadow-2xl border-2 border-[#634b20]"
+          >
+            <DialogTitle 
+              as="h3" 
+              className="text-2xl font-semibold text-[#634b20] mb-6 text-center"
+            >
+              Новый пост
+            </DialogTitle>
+            
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#634b20]">
+                  Название
+                </label>
+                <div className="relative">
+                  <Input 
+                    {...register("title")}
+                    className={clsx(
+                      'w-full h-12 border-[#634b20] border-1 rounded-md pl-3',
+                      'focus:outline-none'
+                    )}
+                  />
+                  {errors.title && (
+                    <small className="text-sm text-red-500 absolute left-0 top-13">
+                      {errors.title.message}
+                    </small>
+                  )}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#634b20]">
+                  Описание
+                </label>
+                <div className="relative">
+                  <Textarea 
+                    {...register("content")} 
+                    className={clsx(
+                      'w-full border-[#634b20] border-1 rounded-md pl-3 pt-3',
+                      'focus:outline-none'
+                    )}
+                    rows={4}
+                  />
+                  {errors.content && (
+                    <small className="text-sm text-red-500 absolute left-0 top-full mt-1">
+                      {errors.content.message}
+                    </small>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex justify-center gap-4 pt-4">
+                <Button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className={clsx(
+                    'px-4 py-2 rounded-md border-1 border-[#313131]',
+                    'bg-[#ffdea3] hover:bg-[#fffbef] text-[#634b20]',
+                    'transition-colors duration-200 cursor-pointer'
+                  )}
+                >
+                  Отмена
+                </Button>
+                <Button
+                  type="submit"
+                  className={clsx(
+                    'px-4 py-2 rounded-md text-white',
+                    'bg-gray-950 hover:bg-gray-900',
+                    'transition-colors duration-200 cursor-pointer'
+                  )}
+                >
+                  Опубликовать
+                </Button>
+              </div>
+            </form>
+          </DialogPanel>
+        </div>
+      </Dialog>
+    </>
+  )
 }

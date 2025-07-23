@@ -11,15 +11,15 @@ export const register = async (req: Request, res: Response) => {
     try {
         const exists = await prisma.user.findUnique({ where: { email } });
         if (exists) {
-            return res.status(400).json({ error: "User with such email already exists" })
+            return res.status(400).json({ error: "User with such email already exists" });
         }
 
         const hashed = await bcrypt.hash(password, 10);
-        const user = await prisma.user.create({ data: {email, password: hashed} })
+        const user = await prisma.user.create({ data: {email, password: hashed} });
 
-        res.status(201).json({ email: user.email, password: user.password })
+        res.status(201).json({ email: user.email, password: user.password });
     } catch (err) {
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ error: "Internal server error", err});
     }
 }
 
