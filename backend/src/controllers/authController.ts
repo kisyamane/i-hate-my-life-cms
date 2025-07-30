@@ -16,8 +16,16 @@ export const register = async (req: Request, res: Response) => {
 
         const hashed = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({ data: {email, password: hashed} });
+        await prisma.user.update({
+            where: {
+                id: user.id
+            },
+            data: {
+                nickname: `User-${user.id}`
+            }
+        });
 
-        res.status(201).json({ email: user.email, password: user.password });
+        res.status(201).json({ message: "Ok"});
     } catch (err) {
         return res.status(500).json({ error: "Internal server error", err});
     }

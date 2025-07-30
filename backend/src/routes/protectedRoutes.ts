@@ -1,15 +1,21 @@
 import express from 'express'
 import { authenticate } from '../middlewares/authMiddleware'
 import { PrismaClient } from '@prisma/client';
-import { error } from 'console';
 import slugify from 'slugify';
+import multer from 'multer';
+import { storage } from '../cloudinary';
+
 
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 interface AuthenticatedRequest extends express.Request {
-    user: { id: number, email: string } // или точный тип юзера
+    user: { 
+        id: number, 
+        email: string 
+    },
+    file?: Express.Multer.File
   }
   
 
@@ -197,6 +203,79 @@ router.delete('/post/:id', authenticate, async(req: AuthenticatedRequest, res) =
 
         return res.status(204).end();
     } catch (err) {
+        console.log(err);
+        return res.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+router.get('/me', authenticate, async(req: AuthenticatedRequest, res) => {
+    const userId = req.user.id;
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                id: userId
+            },
+            select: {
+                id: true,
+                avatar: true,
+                nickname: true,
+                email: true,
+                role: true,
+                posts: {
+                    select: {
+                        title: true,
+                        content: true
+                    },
+                    orderBy: {
+                        createdAt: 'desc'
+                    },
+                    take: 3
+                }
+
+            },
+        });
+
+    
+        return res.status(200).json(user);
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+router.put('/me', authenticate, async(req: AuthenticatedRequest, res) => {
+    const userId = req.user.id;
+    const { avatar, nickname } = req.body;
+    console.log(nickname);
+
+    try {
+        const user = await prisma.user.update({
+            where: {
+                id: userId
+            },
+            data: {
+                avatar,
+                nickname
+            }
+        });
+    
+        return res.status(201).json(user);
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+const upload = multer({ storage });
+
+router.post('/me/avatar', upload.single('avatar'), authenticate, async(req: AuthenticatedRequest, res) => {
+    const file = req.file as Express.Multer.File & { path: string }
+
+    try {
+        const cloudinaryUrl = file.path;
+        res.status(201).json({ avatar: cloudinaryUrl });
+    } catch(err) {
         console.log(err);
         return res.status(500).json({ error: "Something went wrong" });
     }

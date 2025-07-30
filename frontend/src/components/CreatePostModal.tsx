@@ -43,7 +43,7 @@ export default function CreatePostModal() {
     <>
       <Button 
         onClick={() => setOpen(true)} 
-        className="bg-[#ffdea3] hover:bg-[#fffbef] border-[#313131] border-2 px-3 py-1 rounded-md text-[#634b20] cursor-pointer"
+        className="bg-[#ffdea3] hover:bg-[#fffbef] text-md px-2 py-0.5 rounded-md text-black transition cursor-pointer"
       >
         Создать пост
       </Button>
@@ -116,8 +116,8 @@ export default function CreatePostModal() {
                   type="button"
                   onClick={() => setOpen(false)}
                   className={clsx(
-                    'px-4 py-2 rounded-md border-1 border-[#313131]',
-                    'bg-[#ffdea3] hover:bg-[#fffbef] text-[#634b20]',
+                    'px-4 py-2 rounded-lg border-1 border-gray-700',
+                    'bg-red-400 hover:bg-red-300 text-gray-950',
                     'transition-colors duration-200 cursor-pointer'
                   )}
                 >
@@ -127,7 +127,7 @@ export default function CreatePostModal() {
                   type="submit"
                   className={clsx(
                     'px-4 py-2 rounded-md text-white',
-                    'bg-gray-950 hover:bg-gray-900',
+                    'bg-gray-950 hover:bg-gray-700',
                     'transition-colors duration-200 cursor-pointer'
                   )}
                 >

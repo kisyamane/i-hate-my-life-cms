@@ -18,6 +18,8 @@ model User {
   password  String
   role      Role   @default(USER)
   posts     Post[]
+  nickname String?
+  avatar String?
   passwordResetToken PasswordResetToken?
 }
 

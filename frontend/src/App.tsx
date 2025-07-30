@@ -1,9 +1,11 @@
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import PostList from './pages/PostList';
 import PostView from './pages/PostView';
 import AuthForm from './pages/AuthForm';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Profile from './pages/Profile';
+import NotFound from './pages/NotFound';
 
 function App() {
 
@@ -17,6 +19,8 @@ function App() {
         <Route path='/posts/:slug' element={<PostView />} />
         <Route path='/forgot-password' element={<ForgotPassword />} />
         <Route path='/reset-password/:token' element={<ResetPassword />} />
+        <Route path='/profile' element={<Profile />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );
