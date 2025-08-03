@@ -43,7 +43,7 @@ export default function CreatePostModal() {
     <>
       <Button 
         onClick={() => setOpen(true)} 
-        className="bg-[#ffdea3] hover:bg-[#fffbef] text-md px-2 py-0.5 rounded-md text-black transition cursor-pointer"
+        className="bg-[#ffdea3] hover:bg-[#fffbef] text-md px-2 py-0.5 rounded-md text-gray-950 transition cursor-pointer font-medium"
       >
         Создать пост
       </Button>

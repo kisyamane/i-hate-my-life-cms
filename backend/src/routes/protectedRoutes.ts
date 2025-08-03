@@ -24,44 +24,77 @@ router.get('/profile', authenticate, (req: AuthenticatedRequest, res) => {
 });
 
 router.get('/posts', authenticate, async(req: AuthenticatedRequest, res) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 5;
+    const search = req.query.search as string || '';
+
+
     try {
         const posts = await prisma.post.findMany({
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        email: true
-                    }
-                }
-            }
-        });
-
-        return res.status(200).json(posts);
-    } catch(err) {
-        return res.status(500).json({ error: "Something went wrong" });
-    }
-});
-
-router.get('/my-posts', authenticate, async(req: AuthenticatedRequest, res) => {
-    const userId = req.user.id;
-    try {
-        const posts = await prisma.post.findMany({
-            where: {
-                author: {
-                    id: userId
-                }
+            where: search
+                ? {
+                      OR: [
+                          {
+                              title: {
+                                  contains: search,
+                                  mode: 'insensitive'
+                              }
+                          },
+                          {
+                              content: {
+                                  contains: search,
+                                  mode: 'insensitive'
+                              }
+                          }
+                      ]
+                  }
+                : {},
+            orderBy: {
+                createdAt: 'desc'
             },
+            take: pageSize,
+            skip: (page - 1) * pageSize, 
             include: {
                 author: {
                     select: {
                         id: true,
-                        email: true
+                        nickname: true,
+                        avatar: true
                     }
                 }
             }
         });
 
-        return res.status(200).json(posts);
+        const total = await prisma.post.count({
+            where: search
+                ? {
+                      OR: [
+                          {
+                              title: {
+                                  contains: search,
+                                  mode: 'insensitive'
+                              }
+                          },
+                          {
+                              content: {
+                                  contains: search,
+                                  mode: 'insensitive'
+                              }
+                          }
+                      ]
+                  }
+                : {}
+        });
+        console.log('#####################')
+        console.log(posts);
+        console.log(search)
+
+        return res.status(200).json({
+            posts,
+            page,
+            pageSize,
+            total
+        });
     } catch(err) {
         return res.status(500).json({ error: "Something went wrong" });
     }
@@ -77,7 +110,8 @@ router.get('/posts/:slug', authenticate, async(req: AuthenticatedRequest, res) =
                 author: {
                     select: {
                         id: true,
-                        email: true
+                        nickname: true,
+                        avatar: true
                     }
                 }
             }
@@ -208,13 +242,13 @@ router.delete('/post/:id', authenticate, async(req: AuthenticatedRequest, res) =
     }
 });
 
-router.get('/me', authenticate, async(req: AuthenticatedRequest, res) => {
-    const userId = req.user.id;
+router.get('/user/:nickname', authenticate, async(req: AuthenticatedRequest, res) => {
+    const nickname = req.params.nickname;
 
     try {
         const user = await prisma.user.findUnique({
             where: {
-                id: userId
+                nickname
             },
             select: {
                 id: true,
@@ -225,29 +259,43 @@ router.get('/me', authenticate, async(req: AuthenticatedRequest, res) => {
                 posts: {
                     select: {
                         title: true,
-                        content: true
+                        content: true,
+                        slug: true,
+                        author:  {
+                            select: {
+                                nickname: true,
+                                avatar: true
+                            }
+                        }
                     },
                     orderBy: {
                         createdAt: 'desc'
                     },
                     take: 3
                 }
-
             },
         });
-
     
-        return res.status(200).json(user);
-    } catch (err) {
+        return res.status(200).json(user);        
+    } catch(err) {
         console.log(err);
         return res.status(500).json({ error: "Something went wrong" });
     }
-});
+})
 
 router.put('/me', authenticate, async(req: AuthenticatedRequest, res) => {
     const userId = req.user.id;
     const { avatar, nickname } = req.body;
-    console.log(nickname);
+
+    const exists = await prisma.user.findUnique({
+        where: {
+            nickname
+        }
+    });
+
+    if (exists && exists.id !== userId) {
+        return res.json({error: "Никнейм уже используется"});
+    }
 
     try {
         const user = await prisma.user.update({

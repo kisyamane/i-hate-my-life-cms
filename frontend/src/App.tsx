@@ -6,6 +6,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
+import LogOut from './pages/LogOut';
 
 function App() {
 
@@ -16,11 +17,12 @@ function App() {
         <Route path='/register' element={<AuthForm mode='register'/>} />
         <Route path='/posts' element={<PostList mine={false} />} />
         <Route path='/my-posts' element={<PostList mine={true} />} />
-        <Route path='/posts/:slug' element={<PostView />} />
+        <Route path='/post/:slug' element={<PostView />} />
         <Route path='/forgot-password' element={<ForgotPassword />} />
         <Route path='/reset-password/:token' element={<ResetPassword />} />
-        <Route path='/profile' element={<Profile />} />
-        <Route path="*" element={<NotFound />} />
+        <Route path='/user/:nickname' element={<Profile />} />
+        <Route path='*' element={<NotFound />} />
+        <Route path='/logout' element={<LogOut />}/>
       </Routes>
     </div>
   );

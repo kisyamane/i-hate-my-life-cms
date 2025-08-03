@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import API from "../services/api";
 import { Menu, MenuButton, MenuItem, MenuItems, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
-import { Fragment } from "react";
 
 export default function Navbar({ authorized }: { authorized: boolean }) {
 
@@ -12,7 +11,7 @@ export default function Navbar({ authorized }: { authorized: boolean }) {
   const [avatar, setAvatar] = useState<string>('');
 
   useEffect(() => {
-    API.get('api/me')
+    API.get(`api/user/${localStorage.getItem('nickname')}`)
     .then(res => {
       setNickname(res.data.nickname);
       setAvatar(res.data.avatar);
@@ -21,7 +20,7 @@ export default function Navbar({ authorized }: { authorized: boolean }) {
   }, []);
 
   return (
-    <header className="bg-gray-950 text-black shadow-md w-screen fixed top-0 left-0">
+    <header className="bg-gray-950 text-gray-950 shadow-md w-screen fixed top-0 left-0 z-20">
       {authorized ? (
         <>
           <nav className="max-w-full px-16 py-3 flex justify-between items-center gap-64">
@@ -34,15 +33,15 @@ export default function Navbar({ authorized }: { authorized: boolean }) {
                 {({open}) => (
                   <>
                     <MenuButton className={`inline-flex justify-between w-40 items-center gap-2 bg-[#ffdea3] px-1 py-1 shadow hover:bg-[#fffbef] transition focus:outline-none cursor-pointer ${open ? "rounded-t-md rounded-b-none" : "rounded-md"}`}>
-                      <div className="flex gap-2">
-                        <img src={avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover" />
-                        <span className="text-xl">{nickname}</span>
+                      <div className="flex gap-2 items-center">
+                        <img src={avatar || 'default.jpg'} alt="Avatar" className="w-8 h-8 rounded-full object-cover" />
+                        <span className="text-md font-medium">{nickname}</span>
                       </div>
                       <ChevronDownIcon className="w-5 h-5 text-gray-500" />
                     </MenuButton>
                     <MenuItems anchor="bottom" className={`focus:outline-none bg-[#ffdea3] w-40 rounded-sm ${open ? "rounded-b-md rounded-t-none" : "rounded-md"}`}>
                       <MenuItem>
-                        <Link to="/profile">
+                        <Link to={`/user/${encodeURIComponent(nickname)}`}>
                           <button className={`flex items-center gap-2 w-full px-4 py-2 hover:bg-yellow-100 cursor-pointer text-lg`}>
                             Профиль
                           </button>
@@ -56,7 +55,7 @@ export default function Navbar({ authorized }: { authorized: boolean }) {
                         </Link>
                       </MenuItem>
                       <MenuItem>
-                        <Link to="/sign-out">
+                        <Link to="/logout">
                           <button className={`flex items-center gap-2 w-full px-4 py-2 hover:bg-red-300 cursor-pointer text-lg`}>
                             Выйти
                           </button>

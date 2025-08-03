@@ -8,8 +8,8 @@ import { useForm } from "react-hook-form";
 import clsx from 'clsx'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { TiThMenu, TiTrash } from "react-icons/ti";
-import { IoMdTrash } from "react-icons/io";
-import { FaBrush, FaPaintBrush } from "react-icons/fa";
+import { FaBrush } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 import { Input, Textarea, Button } from "@headlessui/react";
 
@@ -57,7 +57,7 @@ export default function PostContainer({ post, mine, removePostFromState }: { pos
     return (
         <div 
             key={post.id} 
-            onClick={() => !editMode && navigate(`${post.slug}`)} 
+            onClick={() => !editMode && navigate(`/post/${post.slug}`)} 
             className="cursor-pointer transition-transform hover:scale-[1.01] bg-[#ffdea3] border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg max-w-7xl w-full flex flex-row justify-between"
         >
             {editMode ? 
@@ -130,44 +130,57 @@ export default function PostContainer({ post, mine, removePostFromState }: { pos
             (<div className="space-y-2">
                 <h2 className="text-2xl font-semibold text-[#634b20]">{post.title}</h2>
                 <p className="text-gray-700">{post.content}</p>
-                <small className="text-sm text-gray-500">Author: {post.author?.email || "Неизвестен"}</small>
+                <div className="flex items-center gap-2 mt-4">
+                    <img
+                        src={post?.author?.avatar || "/default.jpg"}
+                        alt="Avatar"
+                        className="w-8 h-8 rounded-full object-cover"
+                    />
+                    <Link
+                        to={`/user/${encodeURIComponent(post?.author?.nickname)}`}
+                        className="text-sm text-gray-800 font-medium hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {post?.author?.nickname || "Неизвестен"}
+                    </Link>
+                </div>
             </div>)}
             <div className="self-center flex flex-row">
                 <div>
 
                 </div>
                 {mine && !editMode && 
-                <div onClick={(e) => e.stopPropagation()} className="relative">
-                    <Menu>
-                        <MenuButton className="text-[#634b20] hover:text-[#3e2f16] p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ffdea3]">
-                            <TiThMenu className="text-xl size-8 cursor-pointer" />
-                        </MenuButton>
-                    
-                        <MenuItems className="absolute right-0 mt-2 w-40 bg-[#fffaf3] border border-[#f1d9ac] rounded-lg shadow-lg z-10">
-                            <MenuItem>
-                                <button
-                                    className={`flex items-center gap-2 w-full px-4 py-2 text-sm text-[#634b20] hover:bg-[#ffeccc] hover:rounded-t-lg`}
-                                    onClick={() => setEditMode(true)}
-                                >
-                                    <FaBrush className="text-md" />
-                                    Редактировать
-                                </button>
-                            </MenuItem>
+                    <div onClick={(e) => e.stopPropagation()} className="relative">
+                        <Menu>
+                            <MenuButton className="text-[#634b20] hover:text-[#3e2f16] p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ffdea3]">
+                                <TiThMenu className="text-xl size-8 cursor-pointer" />
+                            </MenuButton>
                         
-                            <MenuItem>
-                                <button
-                                    className={`flex items-center gap-2 w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50 hover:rounded-b-lg`}
-                                    onClick={removePost}
-                                >
-                                    <TiTrash className="text-md" />
-                                    Удалить
-                                </button>
-                            </MenuItem>
-                        </MenuItems>
-                    </Menu>
-              </div>
-              
-                }
+                            <MenuItems className="absolute right-0 mt-2 w-40 bg-[#fffaf3] border border-[#f1d9ac] rounded-lg shadow-lg z-10">
+                                <MenuItem>
+                                    <button
+                                        className={`flex items-center gap-2 w-full px-4 py-2 text-sm text-[#634b20] hover:bg-[#ffeccc] hover:rounded-t-lg`}
+                                        onClick={() => setEditMode(true)}
+                                    >
+                                        <FaBrush className="text-md" />
+                                        Редактировать
+                                    </button>
+                                </MenuItem>
+                            
+                                <MenuItem>
+                                    <button
+                                        className={`flex items-center gap-2 w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50 hover:rounded-b-lg`}
+                                        onClick={removePost}
+                                    >
+                                        <TiTrash className="text-md" />
+                                        Удалить
+                                    </button>
+                                </MenuItem>
+                            </MenuItems>
+                        </Menu>
+                </div>
+                
+            }
             </div>
         </div>
     );
