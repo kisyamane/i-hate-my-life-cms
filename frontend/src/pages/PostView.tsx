@@ -1,22 +1,113 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import API from "../services/api";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/NavBar";
-import type { Post } from "./PostList";
+import type { Post, Comment, Reaction } from "../types";
 import { Link } from "react-router-dom";
+import { Textarea, Button } from "@headlessui/react";
+import CommentContainer from "../components/CommentContainer";
+import { AiFillDislike } from "react-icons/ai";
+import { AiFillLike } from "react-icons/ai";
+import { AiOutlineDislike } from "react-icons/ai";
+import { AiOutlineLike } from "react-icons/ai";
 
 export default function PostView() {
   const { slug } = useParams<{ slug: string }>();
 
   const [post, setPost] = useState({} as Post);
+  const [comments, setComments] = useState<Comment[]>([])
+
+  const [filled, setFilled] = useState<{ like: boolean, dislike: boolean }>({ like: false, dislike: false });
+  const [reactions, setReactions] = useState<{ likes: number, dislikes: number }>({likes: 0, dislikes: 0})
+
+  const [newComment, setNewComment] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleCommentSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    API.post(`/api/posts/${slug}/comments`, { content: newComment })
+    .then((res) => {
+      setComments(p => [res.data, ...p])
+    })
+    .catch(err => alert('Failed to save post'))
+    .finally(() => setLoading(false));
+  }
 
   useEffect(() => {
+    setLoading(true);
     API.get(`/api/posts/${slug}`)
       .then((res) => {
         setPost(res.data);
+        setReactions({
+          dislikes: (res.data.reactions as Reaction[]).filter(r => r.type === "DISLIKE").length,
+          likes: (res.data.reactions as Reaction[]).filter(r => r.type === "LIKE").length
+        });
+
+        const myReaction = (res.data.reactions as Reaction[]).filter((r) => r.userId === parseInt(localStorage.getItem('id') as string))[0];
+
+        if (myReaction) {
+            switch(myReaction.type) {
+                case 'LIKE':
+                    setFilled({like: true, dislike: false});
+                    break;
+                case "DISLIKE":
+                    setFilled({like: false, dislike: true});
+                    break;
+            }
+        }
       })
       .catch(() => "Failed to fetch post");
-  }, [slug]);
+
+    API.get(`/api/posts/${slug}/comments`)
+    .then((res) => {
+      setComments(res.data);
+    })
+    .catch(err => alert('Failed to load comments'))
+    .finally(() => setLoading(false));
+  }, []);
+
+  const deleteReaction = (r: Reaction) => {
+      API.delete(`api/posts/${post.id}/react`)
+      .catch(err => alert('Failed to delete reaction'))
+      .finally(() => {
+          setFilled({like: false, dislike: false});
+          switch(r.type) {
+              case 'LIKE':
+                  setReactions(p => ({...p, likes: p.likes - 1}))
+                  break;
+              case "DISLIKE":
+                  setReactions(p => ({...p, dislikes: p.dislikes - 1}))
+                  break;
+          }
+      });
+  }
+
+  const changeReaction = (r: Reaction) => {
+      API.post(`api/posts/${post.id}/react`, { type: r.type })
+      .catch(err => alert('Failed to add reaction'))
+      .finally(() => {
+          switch(r.type) {
+              case 'LIKE':
+                  filled.dislike
+                    ? setReactions(p => ({dislikes: p.dislikes - 1, likes: p.likes + 1}))
+                    : setReactions(p => ({...p, likes: p.likes + 1}))
+                  setFilled({like: true, dislike: false});
+                  break;
+              case "DISLIKE":
+                  filled.like
+                    ? setReactions(p => ({dislikes: p.dislikes + 1, likes: p.likes - 1}))
+                    : setReactions(p => ({...p, dislikes: p.dislikes + 1}))
+                  setFilled({like: false, dislike: true});
+                  break;
+          }
+      })
+  }
+
+  const addCommentToState = (comment: Comment) => {
+    setComments(p => [...p, comment])
+  }
+
 
   return (
     <div className="min-h-screen">
@@ -44,11 +135,73 @@ export default function PostView() {
           {post.content}
         </article>
 
+        <div className="flex flex-row mt-2 text-xl gap-3 text-gray-700">
+          <div className="flex flex-row items-center gap-0.5">
+            { filled.like
+              ? <AiFillLike 
+                className="cursor-pointer"
+                onClick={() => deleteReaction({ type: 'LIKE' })}
+              />
+              : <AiOutlineLike 
+                className="cursor-pointer"
+                onClick={() => changeReaction({type: 'LIKE'})}
+              />
+            }
+            <span className="text-lg">{reactions.likes}</span>
+          </div>
+          <div className="flex flex-row items-center gap-0.5">
+            { filled.dislike
+              ? <AiFillDislike 
+                className="cursor-pointer"
+                onClick={() => deleteReaction({ type: 'DISLIKE' })} 
+              />
+              : <AiOutlineDislike 
+                className="cursor-pointer"
+                onClick={() => changeReaction({ type: 'DISLIKE' })}
+              />
+            }
+            <span className="text-lg">{reactions.dislikes}</span>
+          </div>
+        </div>
+
         <hr className="my-12 border-gray-300" />
 
-        <div className="text-gray-600 text-lg italic">
-          Тут будут комментарии. Когда-нибудь.
-        </div>
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Комментарии: </h2>
+          <form onSubmit={handleCommentSubmit} className="mb-6">
+            <Textarea 
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 resize-none focus:outline-none"
+              placeholder="Оставьте комментарий..."
+              rows={3}
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = "auto"; // сброс
+                  target.style.height = `${target.scrollHeight}px`; // подгон под контент
+              }
+            }
+            />
+            <Button 
+              className="cursor-pointer mt-5 bg-gray-950 hover:bg-gray-800 transition text-white font-medium px-4 py-2 rounded disabled:opacity-50"
+              type="submit"
+              disabled={loading}
+            >
+              Отправить
+            </Button>
+          </form>
+          <div className="flex flex-col gap-6 mt-10">
+            {comments.length === 0
+            ? (
+              <p>Здесь пусто.</p>
+            ) 
+            : comments.map(comment => (
+              <CommentContainer comment={comment} />
+            ))
+            }
+          </div>
+
+        </section>
       </div>
     </div>
   );

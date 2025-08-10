@@ -4,7 +4,7 @@ import { Button, Input } from "@headlessui/react";
 import API from "../services/api";
 import clsx from 'clsx'
 import { FaFileUpload } from "react-icons/fa";
-import type { Post } from "./PostList";
+import type { Post } from "../types";
 import PostContainer from "../components/PostContainer";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -80,6 +80,7 @@ export default function Profile() {
             } else {
                 setErrors({});
                 setEditMode(false);
+                localStorage.setItem('nickname', nickname);
             }
         } catch(err) {
             alert(err);

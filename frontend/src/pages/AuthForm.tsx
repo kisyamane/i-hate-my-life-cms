@@ -62,6 +62,7 @@ export default function AuthForm({mode}: { mode: string }) {
                 const res = await API.post('/api/auth/login', data);
                 localStorage.setItem('jwt_sign', res.data.jwt_sign);
                 localStorage.setItem('nickname', res.data.nickname);
+                localStorage.setItem('id', res.data.id);
                 navigate('/posts');
             } catch(err) {
                 alert('Login failed');

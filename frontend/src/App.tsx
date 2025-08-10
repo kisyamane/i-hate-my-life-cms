@@ -17,7 +17,7 @@ function App() {
         <Route path='/register' element={<AuthForm mode='register'/>} />
         <Route path='/posts' element={<PostList mine={false} />} />
         <Route path='/my-posts' element={<PostList mine={true} />} />
-        <Route path='/post/:slug' element={<PostView />} />
+        <Route path='/posts/:slug' element={<PostView />} />
         <Route path='/forgot-password' element={<ForgotPassword />} />
         <Route path='/reset-password/:token' element={<ResetPassword />} />
         <Route path='/user/:nickname' element={<Profile />} />

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import type { Post } from "../pages/PostList";
+import type { Post } from "../types";
 import API from "../services/api";
 import { useState } from "react";
 import * as yup from "yup";
@@ -57,7 +57,7 @@ export default function PostContainer({ post, mine, removePostFromState }: { pos
     return (
         <div 
             key={post.id} 
-            onClick={() => !editMode && navigate(`/post/${post.slug}`)} 
+            onClick={() => !editMode && navigate(`/posts/${post.slug}`)} 
             className="cursor-pointer transition-transform hover:scale-[1.01] bg-[#ffdea3] border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg max-w-7xl w-full flex flex-row justify-between"
         >
             {editMode ? 
@@ -179,7 +179,6 @@ export default function PostContainer({ post, mine, removePostFromState }: { pos
                             </MenuItems>
                         </Menu>
                 </div>
-                
             }
             </div>
         </div>

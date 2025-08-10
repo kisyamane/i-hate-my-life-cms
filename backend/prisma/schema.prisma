@@ -12,32 +12,117 @@ enum Role {
   ADMIN
 }
 
+enum ReactionType {
+  LIKE
+  DISLIKE
+}
+
+
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  posts     Post[]
-  nickname String?   @unique
-  avatar String?
+  id                 Int                  @id @default(autoincrement())
+  email              String               @unique
+  password           String
+  role               Role                 @default(USER)
+  posts              Post[]
+  nickname           String?              @unique
+  avatar             String?
   passwordResetToken PasswordResetToken?
+  comments           Comment[]
+  answers            Answer[]
+  postReactions      PostReaction[]
+  commentReactions   CommentReaction[]
+  answerReactions    AnswerReaction[]
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
+  id        Int            @id @default(autoincrement())
   title     String
-  slug      String   @unique
+  slug      String         @unique
   content   String
-  createdAt DateTime @default(now())
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt DateTime       @default(now())
+  author    User           @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   authorId  Int
+  comments  Comment[]
+  reactions PostReaction[]
 }
 
 model PasswordResetToken {
   id        Int      @id @default(autoincrement())
   token     String   @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId    Int @unique
+  userId    Int      @unique
   expiresAt DateTime
 }
 
+model Comment {
+  id        Int               @id @default(autoincrement())
+  content   String 
+  createdAt DateTime          @default(now())
+
+  author    User              @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  authorId  Int
+
+  post      Post              @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  postId    Int               
+
+  reactions CommentReaction[]
+  answers   Answer[]
+}
+
+model Answer {
+  id        Int               @id @default(autoincrement())
+  content   String 
+  createdAt DateTime          @default(now())
+
+  author    User              @relation(fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  authorId  Int
+
+  comment      Comment        @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  commentId    Int               
+
+  reactions AnswerReaction[]
+}
+
+model AnswerReaction {
+  id        Int          @id @default(autoincrement())
+  createdAt DateTime     @default(now())
+
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    Int
+
+  answer    Answer         @relation(fields: [answerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  answerId    Int
+
+  type      ReactionType
+
+  @@unique([userId, answerId]) 
+}
+
+model PostReaction {
+  id        Int          @id @default(autoincrement())
+  createdAt DateTime     @default(now())
+
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    Int
+
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  postId    Int
+
+  type      ReactionType
+
+  @@unique([userId, postId]) 
+}
+
+model CommentReaction {
+  id        Int          @id @default(autoincrement())
+  type      ReactionType
+  createdAt DateTime     @default(now())
+
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    Int
+
+  comment   Comment      @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  commentId Int
+
+  @@unique([userId, commentId])
+}

@@ -3,14 +3,8 @@ import API from "../services/api";
 import Navbar from "../components/NavBar";
 import PostContainer from "../components/PostContainer";
 import { Input } from "@headlessui/react";
+import type { Post } from "../types";
 
-export interface Post {
-    id: number;
-    slug: string;
-    title: string;
-    content: string;
-    author: { nickname: string; avatar?: string };
-}
 
 export default function PostList({ mine }: { mine: boolean }) {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -34,45 +28,39 @@ export default function PostList({ mine }: { mine: boolean }) {
         
         API.get(`/api/posts?pageSize=${pageSize}&page=${queryParams.page}&search=${queryParams.search}`)
         .then((res) => {
-            // Для первой страницы заменяем посты, для последующих - добавляем
             if (queryParams.page === 1) {
                 setPosts(res.data.posts);
             } else {
                 setPosts(prev => [...prev, ...res.data.posts]);
             }
             
-            // Правильный расчёт hasMore: сравниваем с СЛЕДУЮЩЕЙ страницей
             setHasMore(res.data.total > pageSize * queryParams.page);
             
         })
         .catch(err => {
             console.error(err);
-            setHasMore(false); // Сброс при ошибке
+            setHasMore(false); 
         })
         .finally(() => setLoading(false));
     };
 
-    // Эффект для поиска
     useEffect(() => {
         const timeout = setTimeout(() => {
-            // Полный сброс состояния при изменении поиска
             setPosts([]);
             setHasMore(true);
             setQueryParams({
                 search: inputValue,
-                page: 1 // Сбрасываем на первую страницу
+                page: 1 
             });
         }, 500);
 
         return () => clearTimeout(timeout);
     }, [inputValue]);
 
-    // Эффект для загрузки данных
     useEffect(() => {
         fetchPosts();
     }, [queryParams]);
 
-    // Эффект для бесконечного скролла
     useEffect(() => {
         if (!loader.current) return;
         

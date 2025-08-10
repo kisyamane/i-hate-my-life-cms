@@ -1,6 +1,5 @@
 import { useState } from "react";
 import API from "../services/api";
-import { useNavigate } from "react-router-dom";
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import * as yup from "yup";
 import { Input, Button, Textarea } from "@headlessui/react";
@@ -15,7 +14,6 @@ const schema = yup.object({
 
 export default function CreatePostModal() {
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
   
   const {
       register,
@@ -31,9 +29,8 @@ export default function CreatePostModal() {
     try {
       const post = await API.post('/api/new-post', data);
       console.log(post);
-      navigate(`/:${post.data.slug}`);
-      setOpen(false); // Закрываем модальное окно после успешного создания
-      reset(); // Сбрасываем форму
+      setOpen(false); 
+      reset(); 
     } catch(err) {
       alert("Failed to create post")
     }

@@ -49,7 +49,7 @@ export const login = async (req: Request, res: Response) => {
             expiresIn: "7d"
         });
 
-        return res.status(201).json({ jwt_sign, nickname: user.nickname });
+        return res.status(201).json({ jwt_sign, nickname: user.nickname, id: user.id });
     } catch (err) {
         return res.status(500).json({ error: "Internal server error" });
     }
