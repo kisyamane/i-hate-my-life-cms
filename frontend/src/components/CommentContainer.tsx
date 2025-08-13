@@ -21,6 +21,10 @@ export default function Comment({ comment }: {comment: Comment}) {
     const [firstAnswersLoaded, setfirstAnswersLoaded] = useState(false);
     const [answers, setAnswers] = useState<Answer[]>([]);
 
+    const [hasMore, setHasMore] = useState(true);
+    const [page, setPage] = useState(0);
+    const pageSize = 4;
+
     const onAnswerSubmit = async() => {
         if (newAnswer !== '') {
             try {
@@ -40,8 +44,11 @@ export default function Comment({ comment }: {comment: Comment}) {
     const loadAnswers = async() => {
         try {
             setLoading(true);
-            const res = await API.get(`/api/comments/${comment.id}/answers`);
-            setAnswers(res.data);
+            const res = await API.get(`/api/comments/${comment.id}/answers?page=${page}&pageSize=${pageSize}`);
+            console.log(res.data)
+            setAnswers(p => [...p, ...res.data.answers]);
+            setPage(p => p + 1)
+            setHasMore(res.data.hasMore);
             setShowAnswers(true);
             setfirstAnswersLoaded(true);
         } catch(err) {
@@ -188,7 +195,7 @@ export default function Comment({ comment }: {comment: Comment}) {
                     </div>
                 )}
                 <Button 
-                    className="cursor-pointer mt-3 bg-[#ffdea3] hover:opacity-85 transition text-gray-950 font-medium pr-4 pl-3 py-2 flex flex-row items-center  rounded-full text-sm"
+                    className="cursor-pointer mt-3 bg-[#ffdea3] hover:opacity-85 transition text-gray-950 font-medium pr-4 pl-3 py-2 flex flex-row items-center  rounded-full"
                     onClick={() => {
                         firstAnswersLoaded
                          ? (showAnswers ? setShowAnswers(false) : setShowAnswers(true))
@@ -197,14 +204,21 @@ export default function Comment({ comment }: {comment: Comment}) {
                     disabled={loading}
                 >
                     { showAnswers ? <MdKeyboardArrowUp className="text-xl" /> : <MdKeyboardArrowDown className="text-xl"/> }
-                    <span>Ответы</span>
+                    <span className="text-md font-medium">Ответы</span>
                 </Button>
                 { showAnswers &&
-                    <section className="w-full pt-6">
+                    <section className="w-full pt-6 flex flex-col gap-4 items-end">
                         {answers.map(answer => (
                             <AnswerContainer answer={answer} />
                         ))}
-
+                        {hasMore && 
+                            <Button
+                                onClick={loadAnswers}
+                                className="rounded-full bg-[#ffdea3] px-4 py-2 text-gray-950 font-medium text-md cursor-pointer hover:opacity-85"
+                            >
+                                Далее
+                            </Button>
+                        }
                     </section>
                 }
             </div>

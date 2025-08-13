@@ -350,6 +350,8 @@ router.post('/me/avatar', upload.single('avatar'), authenticate, async(req: Auth
 
 router.get('/posts/:slug/comments', authenticate, async(req: AuthenticatedRequest, res) => {
     const slug = req.params.slug;
+    const pageSize = parseInt(req.query.pageSize as string) || 4;
+    const page = parseInt(req.query.page as string) || 0;
 
     try {
         const post = await prisma.post.findUnique({
@@ -382,10 +384,14 @@ router.get('/posts/:slug/comments', authenticate, async(req: AuthenticatedReques
                         userId:true
                     }
                 }
-            }
+            },
+            take: pageSize,
+            skip: pageSize * page
         });
 
-        return res.status(200).json(comments);
+        const hasMore = (await prisma.comment.count()) > pageSize * (page + 1);
+
+        return res.status(200).json({ comments, hasMore });
     } catch(err) {
         console.log(err);
         return res.status(500).json({ error: "Something went wrong" });
@@ -591,6 +597,8 @@ router.post('/comments/:commentId/answer', authenticate, async(req: Authenticate
 
 router.get('/comments/:commentId/answers', authenticate, async(req: AuthenticatedRequest, res) => {
     const commentId = parseInt(req.params.commentId);
+    const page = parseInt(req.query.page as string) || 0;
+    const pageSize = parseInt(req.query.pageSize as string) || 4;
 
     try {
         const comment = await prisma.comment.findUnique({
@@ -619,10 +627,19 @@ router.get('/comments/:commentId/answers', authenticate, async(req: Authenticate
             orderBy: {
                 createdAt: 'desc'
             },
-            take: 4
+            take: pageSize,
+            skip: page * pageSize
         });
 
-        return res.status(200).json(answers);
+        const total = await prisma.answer.count({
+            where: {
+                commentId
+            }
+        });
+
+
+
+        return res.status(200).json({ answers, hasMore: total > (page + 1) * pageSize });
     } catch(err) {
         console.log(err);
         return res.status(500).json({ error: "Something went wrong" });

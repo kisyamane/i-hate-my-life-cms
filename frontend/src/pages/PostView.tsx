@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import API from "../services/api";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/NavBar";
@@ -22,6 +22,49 @@ export default function PostView() {
 
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const loader = useRef<HTMLDivElement>(null);
+  const observer = useRef<IntersectionObserver>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const pageSize = 4;
+
+  useEffect(() => {
+    if (!loader.current) {
+      return
+    }
+
+    if (observer.current) {
+      observer.current.disconnect();
+    }
+
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !commentsLoading && hasMore) {
+        setPage(p => p + 1);
+      }
+    });
+
+    observer.current.observe(loader.current);
+
+    return () => observer.current?.disconnect()
+  }, [page, hasMore, commentsLoading, loader]);
+
+  useEffect(() => {
+    setCommentsLoading(true);
+    API.get(`/api/posts/${slug}/comments?page=${page}&pageSize=${pageSize}`)
+    .then((res) => {
+      if (page === 0) {
+        setComments(res.data.comments);
+      } else {
+        setComments(p => [...p, ...res.data.comments]);
+      }
+      setHasMore(res.data.hasMore);
+    })
+    .catch(err => alert('Failed to load comments'))
+    .finally(() => setCommentsLoading(false));
+  }, [page]);
+
 
   const handleCommentSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,14 +100,8 @@ export default function PostView() {
             }
         }
       })
-      .catch(() => "Failed to fetch post");
-
-    API.get(`/api/posts/${slug}/comments`)
-    .then((res) => {
-      setComments(res.data);
-    })
-    .catch(err => alert('Failed to load comments'))
-    .finally(() => setLoading(false));
+      .catch(() => "Failed to fetch post")
+      .finally(() => setLoading(false));
   }, []);
 
   const deleteReaction = (r: Reaction) => {
@@ -200,7 +237,7 @@ export default function PostView() {
             ))
             }
           </div>
-
+          <div className="h-10" ref={loader}></div>
         </section>
       </div>
     </div>
