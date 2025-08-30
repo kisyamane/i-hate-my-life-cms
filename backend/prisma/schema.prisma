@@ -21,12 +21,14 @@ enum ReactionType {
 model User {
   id                 Int                  @id @default(autoincrement())
   email              String               @unique
+  verified           Boolean              @default(false)
+  verificationToken  Token?
+  ResetTokens        PasswordResetToken?
   password           String
   role               Role                 @default(USER)
   posts              Post[]
   nickname           String?              @unique
   avatar             String?
-  passwordResetToken PasswordResetToken?
   comments           Comment[]
   answers            Answer[]
   postReactions      PostReaction[]
@@ -125,4 +127,12 @@ model CommentReaction {
   commentId Int
 
   @@unique([userId, commentId])
+}
+
+model Token {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @unique
+  expiresAt DateTime
 }

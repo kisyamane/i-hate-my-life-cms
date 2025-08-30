@@ -1,7 +1,9 @@
 import { Response, Request } from "express";
 import bcrypt from "bcrypt";
+import crypto from "crypto"
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
+import transporter from "..";
 
 const prisma = new PrismaClient;
 const JWT_SECRET = process.env.JWT_SECRET || 'required';
@@ -14,6 +16,8 @@ export const register = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "User with such email already exists" });
         }
 
+        const token = crypto.randomBytes(32).toString("hex");
+
         const hashed = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({ data: {email, password: hashed} });
         await prisma.user.update({
@@ -23,6 +27,16 @@ export const register = async (req: Request, res: Response) => {
             data: {
                 nickname: `User-${user.id}`
             }
+        });
+
+        const expiresAt = new Date(Date.now() + 1000 * 60 * 60);
+        await prisma.token.create({ data: {token, userId: user.id, expiresAt} });
+
+        await transporter.sendMail({
+            from: 'MyCms',
+            to: user.email,
+            subject: "Подтверждение аккаунта",
+            html: `Для подтверждения аккаунта перейдите по ссылке <a>http://localhost:5173/verify/${token}</a>`, // HTML body
         });
 
         res.status(201).json({ message: "Ok"});

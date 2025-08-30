@@ -11,12 +11,14 @@ export default function Navbar({ authorized }: { authorized: boolean }) {
   const [avatar, setAvatar] = useState<string>('');
 
   useEffect(() => {
-    API.get(`api/user/${localStorage.getItem('nickname')}`)
-    .then(res => {
-      setNickname(res.data.nickname);
-      setAvatar(res.data.avatar);
-    })
-    .catch(err => alert("Failed to fetch navbar data"));
+    if (authorized) {
+      API.get(`api/user/${localStorage.getItem('nickname')}`)
+      .then(res => {
+        setNickname(res.data.nickname);
+        setAvatar(res.data.avatar);
+      })
+      .catch(err => alert("Failed to fetch navbar data"));
+    }
   }, []);
 
   return (
@@ -39,7 +41,7 @@ export default function Navbar({ authorized }: { authorized: boolean }) {
                       </div>
                       <ChevronDownIcon className="w-5 h-5 text-gray-500" />
                     </MenuButton>
-                    <MenuItems anchor="bottom" className={`focus:outline-none bg-[#ffdea3] w-40 rounded-sm ${open ? "rounded-b-md rounded-t-none" : "rounded-md"}`}>
+                    <MenuItems anchor="bottom" className={`z-30 focus:outline-none bg-[#ffdea3] w-40 rounded-sm ${open ? "rounded-b-md rounded-t-none" : "rounded-md"}`}>
                       <MenuItem>
                         <Link to={`/user/${encodeURIComponent(nickname)}`}>
                           <button className={`flex items-center gap-2 w-full px-4 py-2 hover:bg-yellow-100 cursor-pointer text-lg`}>

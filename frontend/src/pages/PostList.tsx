@@ -90,7 +90,6 @@ export default function PostList({ mine }: { mine: boolean }) {
     
     return (
         <div>
-            <Navbar authorized={true} />
             <div className="pt-30 flex flex-col items-center gap-12">
                 <h1 className="text-5xl">{mine ? 'Мои посты' : 'Посты'}</h1>
                 <Input

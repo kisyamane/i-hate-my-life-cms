@@ -48,7 +48,6 @@ export default function resetPassword() {
 
     return (
         <div className="flex flex-col items-center justify-center h-screen w-screen gap-12">
-            <Navbar authorized={false} />
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 flex flex-col gap-6 items-center">                    
                     <p className="text-4xl mb-6 self-center">Смена пароля</p>
 

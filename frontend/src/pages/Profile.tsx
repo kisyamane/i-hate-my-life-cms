@@ -90,7 +90,6 @@ export default function Profile() {
 
     return (
         <div className="min-h-screen">
-            <Navbar authorized={true} />
             <div className="pt-24 flex flex-col items-center gap-12">
                 <div className="w-full flex min-h-screen h-full flex-col gap-8 items-center px-4">
                     {editMode && localStorage.getItem('nickname') === nickname ? (

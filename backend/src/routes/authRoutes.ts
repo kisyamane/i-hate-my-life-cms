@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { register, login } from '../controllers/authController';
 import express from 'express';
 import bcrypt from "bcrypt";
+import transporter from '..';
 
 const router =  express.Router();
 const prisma = new PrismaClient();
@@ -41,6 +42,13 @@ router.post('/forgot-password', async(req, res) => {
         });
     
         const resetLink = `http://localhost:5173/reset-password/${token}`;
+
+        await transporter.sendMail({
+            from: 'MyCms',
+            to: user.email,
+            subject: "Сброс пароля",
+            html: `Для сброса пароля перейдите по ссылке <a>${resetLink}</a>`, // HTML body
+        });
     
         console.log(`Password reset link: ${resetLink}`);
     

@@ -18,6 +18,34 @@ interface AuthenticatedRequest extends express.Request {
     file?: Express.Multer.File
   }
   
+router.post('/verify/:token', authenticate, async(req: AuthenticatedRequest, res) => {
+    const userId = req.user.id;
+    const token = req.params.token;
+
+    const user = await prisma.user.findUnique({
+        where: {
+           id: userId 
+        },
+        select: {
+            verificationToken: true
+        }
+    });
+
+    if (user?.verificationToken?.token !== token || new Date() > user.verificationToken.expiresAt) {
+        return res.status(404).json({error: "Token not valid"})
+    }
+
+    await prisma.user.update({
+        where: {
+            id: userId
+        },
+        data: {
+            verified: true
+        }
+    })
+
+    return res.status(200).json({message: "Verified"})
+})
 
 router.get('/profile', authenticate, (req: AuthenticatedRequest, res) => {
     res.json({user: (req as AuthenticatedRequest).user});

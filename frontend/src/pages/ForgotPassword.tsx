@@ -39,7 +39,6 @@ export default function ForgotPassword() {
 
     return (
         <div className="flex flex-col items-center justify-center h-screen w-screen gap-12">
-            <Navbar authorized={false} />
             { !sent && <p className="text-5xl mb-6">Сброс пароля</p> }
             {sent ? (
                 <p className="text-6xl self-center">Письмо с ссылкой отправлено</p>
